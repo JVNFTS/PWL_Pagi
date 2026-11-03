@@ -7,59 +7,69 @@ use Illuminate\Http\Request;
 
 class SupplierController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
-        //
+        $suppliers = Supplier::withCount('products')->orderBy('supplier_name')->get();
+        return view('supplier.index', compact('suppliers'));
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
     public function create()
     {
-        //
+        return view('supplier.create');
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
-        //
+        $data = $request->validate([
+            'supplier_name' => 'required|string|max:255',
+            'phone'         => 'required|string|max:30',
+            'email'         => 'required|email|max:255',
+        ]);
+
+        Supplier::create($data);
+
+        return redirect()
+            ->route('suppliers.index')
+            ->with('success', 'Supplier berhasil disimpan.');
     }
 
-    /**
-     * Display the specified resource.
-     */
     public function show(Supplier $supplier)
     {
-        //
+        return redirect()->route('suppliers.edit', $supplier);
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
     public function edit(Supplier $supplier)
     {
-        //
+        return view('supplier.edit', compact('supplier'));
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(Request $request, Supplier $supplier)
     {
-        //
+        $data = $request->validate([
+            'supplier_name' => 'required|string|max:255',
+            'phone'         => 'required|string|max:30',
+            'email'         => 'required|email|max:255',
+        ]);
+
+        $supplier->update($data);
+
+        return redirect()
+            ->route('suppliers.index')
+            ->with('success', 'Supplier berhasil diperbarui.');
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
     public function destroy(Supplier $supplier)
     {
-        //
+        if ($supplier->products()->exists()) {
+            return redirect()
+                ->route('suppliers.index')
+                ->withErrors('Supplier tidak bisa dihapus karena masih dipakai oleh produk.');
+        }
+
+        $supplier->delete();
+
+        return redirect()
+            ->route('suppliers.index')
+            ->with('success', 'Supplier berhasil dihapus.');
     }
 }
